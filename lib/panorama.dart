@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_cube/flutter_cube.dart';
-import 'package:motion_sensors/motion_sensors.dart';
 
 enum SensorControl {
   /// No sensor used.
@@ -272,31 +271,7 @@ class _PanoramaState extends State<Panorama> with SingleTickerProviderStateMixin
     _streamController.add(null);
   }
 
-  void _updateSensorControl() {
-    _orientationSubscription?.cancel();
-    switch (widget.sensorControl) {
-      case SensorControl.Orientation:
-        motionSensors.orientationUpdateInterval = Duration.microsecondsPerSecond ~/ 60;
-        _orientationSubscription = motionSensors.orientation.listen((OrientationEvent event) {
-          orientation.setValues(event.yaw, event.pitch, event.roll);
-        });
-        break;
-      case SensorControl.AbsoluteOrientation:
-        motionSensors.absoluteOrientationUpdateInterval = Duration.microsecondsPerSecond ~/ 60;
-        _orientationSubscription = motionSensors.absoluteOrientation.listen((AbsoluteOrientationEvent event) {
-          orientation.setValues(event.yaw, event.pitch, event.roll);
-        });
-        break;
-      default:
-    }
 
-    _screenOrientSubscription?.cancel();
-    if (widget.sensorControl != SensorControl.None) {
-      _screenOrientSubscription = motionSensors.screenOrientation.listen((ScreenOrientationEvent event) {
-        screenOrientation = radians(event.angle!);
-      });
-    }
-  }
 
   void _updateTexture(ImageInfo imageInfo, bool synchronousCall) {
     surface?.mesh.texture = imageInfo.image;
@@ -398,7 +373,7 @@ class _PanoramaState extends State<Panorama> with SingleTickerProviderStateMixin
     _streamController = StreamController<Null>.broadcast();
     _stream = _streamController.stream;
 
-    _updateSensorControl();
+
 
     _controller = AnimationController(duration: Duration(milliseconds: 60000), vsync: this)..addListener(_updateView);
     if (widget.sensorControl != SensorControl.None || widget.animSpeed != 0) _controller.repeat();
@@ -424,9 +399,7 @@ class _PanoramaState extends State<Panorama> with SingleTickerProviderStateMixin
     if (widget.child?.image != oldWidget.child?.image) {
       _loadTexture(widget.child?.image);
     }
-    if (widget.sensorControl != oldWidget.sensorControl) {
-      _updateSensorControl();
-    }
+
   }
 
   @override
